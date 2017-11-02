@@ -11,32 +11,24 @@ import AVFoundation
 
 class PulseMeasuringVC: UIViewController {
 
-    @IBOutlet weak var pictureImageView: UIImageView!
+    @IBOutlet weak var pulseView: PulseView! {
+        didSet {
+            pulseView.backgroundColor = .black
+            pulseView.lineColor = .green
+        }
+    }
     var session: AVCaptureSession!
     var currentImage: UIImage? {
         didSet {
-//            self.pictureImageView.image = currentImage
-            guard
-                let height = currentImage?.size.height,
-                let width = currentImage?.size.width else {
-                    return
-            }
-            var imageBrightness: CGFloat = 0.0
-//            for y in 0..<Int(height) {
-                for x in 0..<Int(width) {
-                    let point = CGPoint(x: x, y: 240)
-                    let pixel = Pixel(of: currentImage, at: point)
-                    imageBrightness += pixel.brightness
-                }
-//            }
-            framesBrightness.append(imageBrightness)
-            imageBrightness = 0.0
+            let imageBrightness = calculateImageBrightness(currentImage)
+            pulseView.valuesArray.append(imageBrightness)
+            pulseView.redraw()
         }
     }
-    var framesBrightness: [CGFloat] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.backgroundColor = .white
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -45,7 +37,7 @@ class PulseMeasuringVC: UIViewController {
         toggleFlash(true)
     }
     
-    func configureCamera() {
+    private func configureCamera() {
         session = AVCaptureSession()
         session.sessionPreset = .medium
         guard let device = AVCaptureDevice.default(for: AVMediaType.video) else {
@@ -71,6 +63,23 @@ class PulseMeasuringVC: UIViewController {
         session.startRunning()
     }
     
+    private func calculateImageBrightness(_ image: UIImage?) -> CGFloat {
+        guard
+            let height = image?.size.height,
+            let width = image?.size.width else {
+                return 0.0
+        }
+        var imageBrightness: CGFloat = 0.0
+        for y in stride(from: 0, to: Int(height), by: 10) {
+            for x in stride(from: 0, to: Int(width), by: 10) {
+                let point = CGPoint(x: x, y: y)
+                let pixel = Pixel(of: currentImage, at: point)
+                imageBrightness += pixel.brightness
+            }
+        }
+        return imageBrightness
+    }
+    
 }
 
 //MARK: Frame capturing delegate
@@ -93,9 +102,9 @@ extension PulseMeasuringVC {
         let width: Int = CVPixelBufferGetWidth(imageBuffer)
         let height: Int = CVPixelBufferGetHeight(imageBuffer)
         let colorSpace: CGColorSpace = CGColorSpaceCreateDeviceRGB()
-        let bitsPerCompornent: Int = 8
+        let bitsPerComponent: Int = 8
         let bitmapInfo = CGBitmapInfo(rawValue: (CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue) as UInt32)
-        guard let newContext: CGContext = CGContext(data: baseAddress, width: width, height: height, bitsPerComponent: bitsPerCompornent, bytesPerRow: bytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo.rawValue),
+        guard let newContext: CGContext = CGContext(data: baseAddress, width: width, height: height, bitsPerComponent: bitsPerComponent, bytesPerRow: bytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo.rawValue),
             let imageRef: CGImage = newContext.makeImage()
             else {
                 return nil
