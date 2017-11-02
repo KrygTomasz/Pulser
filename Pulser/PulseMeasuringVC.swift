@@ -15,9 +15,25 @@ class PulseMeasuringVC: UIViewController {
     var session: AVCaptureSession!
     var currentImage: UIImage? {
         didSet {
-            self.pictureImageView.image = currentImage
+//            self.pictureImageView.image = currentImage
+            guard
+                let height = currentImage?.size.height,
+                let width = currentImage?.size.width else {
+                    return
+            }
+            var imageBrightness: CGFloat = 0.0
+//            for y in 0..<Int(height) {
+                for x in 0..<Int(width) {
+                    let point = CGPoint(x: x, y: 240)
+                    let pixel = Pixel(of: currentImage, at: point)
+                    imageBrightness += pixel.brightness
+                }
+//            }
+            framesBrightness.append(imageBrightness)
+            imageBrightness = 0.0
         }
     }
+    var framesBrightness: [CGFloat] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()

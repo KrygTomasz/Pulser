@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2216CC181FAAA7D5005F3734 /* Pixel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2216CC171FAAA7D5005F3734 /* Pixel.swift */; };
+		221ABCDD1FAAA385005EF82B /* UIImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221ABCDC1FAAA385005EF82B /* UIImage+Extensions.swift */; };
 		2281A4D11FAA4CEE00B589BB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2281A4D01FAA4CEE00B589BB /* AppDelegate.swift */; };
 		2281A4D31FAA4CEE00B589BB /* PulseMeasuringVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2281A4D21FAA4CEE00B589BB /* PulseMeasuringVC.swift */; };
 		2281A4D61FAA4CEE00B589BB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2281A4D41FAA4CEE00B589BB /* Main.storyboard */; };
@@ -16,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2216CC171FAAA7D5005F3734 /* Pixel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pixel.swift; sourceTree = "<group>"; };
+		221ABCDC1FAAA385005EF82B /* UIImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extensions.swift"; sourceTree = "<group>"; };
 		2281A4CD1FAA4CEE00B589BB /* Pulser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pulser.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2281A4D01FAA4CEE00B589BB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2281A4D21FAA4CEE00B589BB /* PulseMeasuringVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulseMeasuringVC.swift; sourceTree = "<group>"; };
@@ -63,6 +67,8 @@
 				2281A4DC1FAA4CEE00B589BB /* LaunchScreen.storyboard */,
 				2281A4DF1FAA4CEE00B589BB /* Info.plist */,
 				2281A4D71FAA4CEE00B589BB /* Pulser.xcdatamodeld */,
+				221ABCDC1FAAA385005EF82B /* UIImage+Extensions.swift */,
+				2216CC171FAAA7D5005F3734 /* Pixel.swift */,
 			);
 			path = Pulser;
 			sourceTree = "<group>";
@@ -141,7 +147,9 @@
 			files = (
 				2281A4D31FAA4CEE00B589BB /* PulseMeasuringVC.swift in Sources */,
 				2281A4D11FAA4CEE00B589BB /* AppDelegate.swift in Sources */,
+				2216CC181FAAA7D5005F3734 /* Pixel.swift in Sources */,
 				2281A4D91FAA4CEE00B589BB /* Pulser.xcdatamodeld in Sources */,
+				221ABCDD1FAAA385005EF82B /* UIImage+Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
