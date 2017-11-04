@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  PulseMeasuringVC.swift
 //  Pulser
 //
 //  Created by Kryg Tomasz on 01.11.2017.
@@ -11,20 +11,28 @@ import AVFoundation
 
 class PulseMeasuringVC: UIViewController {
 
-    @IBOutlet weak var pulseView: PulseView! {
+    @IBOutlet weak private var pulseView: PulseView! {
         didSet {
             pulseView.backgroundColor = .black
             pulseView.lineColor = .green
         }
     }
-    var session: AVCaptureSession!
-    var currentImage: UIImage? {
+    private let CAMERA_FRAMES_PER_SECOND: Int = 30
+    private let IMAGES_PER_SECOND: Int = 30
+    private var frameShotsQuantity: Int = 0
+    private var session: AVCaptureSession!
+    private var currentImage: UIImage? {
         didSet {
             let imageBrightness = calculateImageBrightness(currentImage)
+            print(imageBrightness)
+            if !isFlashTurnedOn {
+                toggleFlash(true)
+            }
             pulseView.valuesArray.append(imageBrightness)
             pulseView.redraw()
         }
     }
+    var isFlashTurnedOn: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,15 +77,25 @@ class PulseMeasuringVC: UIViewController {
             let width = image?.size.width else {
                 return 0.0
         }
-        var imageBrightness: CGFloat = 0.0
+        var imageBrightnessSum: CGFloat = 0.0
+        var pixelsAnalyzed = 0
         for y in stride(from: 0, to: Int(height), by: 10) {
             for x in stride(from: 0, to: Int(width), by: 10) {
                 let point = CGPoint(x: x, y: y)
                 let pixel = Pixel(of: currentImage, at: point)
-                imageBrightness += pixel.brightness
+                imageBrightnessSum += pixel.brightness
+                pixelsAnalyzed += 1
             }
         }
-        return imageBrightness
+        let averageImageBrightness = imageBrightnessSum/CGFloat(pixelsAnalyzed)
+        return averageImageBrightness
+    }
+    
+    private func tryToCapture(_ image: UIImage?) {
+        if frameShotsQuantity % (CAMERA_FRAMES_PER_SECOND/IMAGES_PER_SECOND) == 0 {
+            currentImage = image
+            print(frameShotsQuantity)
+        }
     }
     
 }
@@ -85,8 +103,9 @@ class PulseMeasuringVC: UIViewController {
 //MARK: Frame capturing delegate
 extension PulseMeasuringVC: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        print("Captured frame")
-        currentImage = imageFromSampleBuffer(sampleBuffer)
+        frameShotsQuantity += 1
+        let capturedImage = imageFromSampleBuffer(sampleBuffer)
+        tryToCapture(capturedImage)
     }
 }
 
@@ -126,6 +145,7 @@ extension PulseMeasuringVC {
                 } else {
                     device.torchMode = .off
                 }
+                isFlashTurnedOn = turnOn
                 device.unlockForConfiguration()
             } catch {
                 print("Error: Flash could not be used")
