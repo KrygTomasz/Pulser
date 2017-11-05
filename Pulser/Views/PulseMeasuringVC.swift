@@ -21,18 +21,22 @@ class PulseMeasuringVC: UIViewController {
     private let IMAGES_PER_SECOND: Int = 30
     private var frameShotsQuantity: Int = 0
     private var session: AVCaptureSession!
+    private var lastImageBrightness: CGFloat = 0.0
     private var currentImage: UIImage? {
         didSet {
             let imageBrightness = calculateImageBrightness(currentImage)
             print(imageBrightness)
-            if !isFlashTurnedOn {
-                toggleFlash(true)
+            let difference = (lastImageBrightness-imageBrightness).magnitude
+            if imageBrightness < 0.4 && difference < 0.01 {
+                pulseView.addNewPulseValue(imageBrightness)
+                pulseView.isMeasuring = true
+            } else {
+                pulseView.isMeasuring = false
             }
-            pulseView.valuesArray.append(imageBrightness)
+            lastImageBrightness = imageBrightness
             pulseView.redraw()
         }
     }
-    var isFlashTurnedOn: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -94,7 +98,6 @@ class PulseMeasuringVC: UIViewController {
     private func tryToCapture(_ image: UIImage?) {
         if frameShotsQuantity % (CAMERA_FRAMES_PER_SECOND/IMAGES_PER_SECOND) == 0 {
             currentImage = image
-            print(frameShotsQuantity)
         }
     }
     
@@ -145,7 +148,6 @@ extension PulseMeasuringVC {
                 } else {
                     device.torchMode = .off
                 }
-                isFlashTurnedOn = turnOn
                 device.unlockForConfiguration()
             } catch {
                 print("Error: Flash could not be used")

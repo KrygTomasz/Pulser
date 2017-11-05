@@ -15,15 +15,36 @@ class PulseView: UIView {
             heartImageView.image = #imageLiteral(resourceName: "heart")
         }
     }
-    @IBOutlet weak private var heartHeight: NSLayoutConstraint!
+    @IBOutlet weak private var heartHeight: NSLayoutConstraint! {
+        didSet {
+            maxHeartHeight = heartHeight.constant
+        }
+    }
+    @IBOutlet weak private var pulseLabel: UILabel! {
+        didSet {
+            pulseLabel.textColor = .white
+        }
+    }
     
-    let MAX_HEART_HEIGHT: CGFloat = 64
-    
-    var contentView : UIView!
     var valuesArray: [CGFloat] = []
     var lineSize: CGFloat = 3.0
     var lineColor: UIColor = .black
-    
+    var isMeasuring: Bool = false {
+        didSet {
+            if isMeasuring {
+                
+            }
+            else {
+                resetMeasurement()
+            }
+        }
+    }
+    private var contentView : UIView!
+    private var timer: Timer?
+    private var isTimerOn: Bool = false
+    private var maxHeartHeight: CGFloat = 0.0
+    private var minimumsArray: [CGFloat] = []
+    private var newValueWasBelowAverage: Bool = false
     private var width: CGFloat = 0.0
     private var height: CGFloat = 0.0
     private(set) var currentMinimum: CGFloat = 0.0
@@ -34,6 +55,10 @@ class PulseView: UIView {
         height = self.bounds.height
         width = self.bounds.width
         xibSetup()
+    }
+    
+    @objc func finishMeasurement() {
+        pulseLabel.text = "\(minimumsArray.count*6)"
     }
     
     override init(frame: CGRect) {
@@ -54,16 +79,69 @@ class PulseView: UIView {
         let view = nib.instantiate(withOwner: self, options: nil).first as! UIView
         return view
     }
+}
+
+//MARK: Measure handling
+extension PulseView {
     
-    func redraw() {
+    private func resetMeasurement() {
+        valuesArray.removeAll()
+        minimumsArray.removeAll()
+        newValueWasBelowAverage = false
+        stopTimer()
+    }
+    
+    func addNewPulseValue(_ newValue: CGFloat) {
+        valuesArray.append(newValue)
         tryToReduceValuesQuantity()
-        self.setNeedsDisplay()
+        tryToDetectHeartBeat(using: newValue)
     }
     
     private func tryToReduceValuesQuantity() {
         while valuesArray.count > Int(width/lineSize) {
             valuesArray.remove(at: 0)
         }
+    }
+    
+    private func tryToDetectHeartBeat(using newValue: CGFloat) {
+        if valuesArray.count > 2 {
+            let average = (currentMaximum + currentMinimum)/2
+            if newValue > average && newValueWasBelowAverage {
+                newValueWasBelowAverage = false
+            }
+            if newValue < average && !newValueWasBelowAverage {
+                newValueWasBelowAverage = true
+                minimumsArray.append(newValue)
+                print("Detected heart beat")
+                pulseLabel.text = "Measuring..."
+                tryToStartTimer()
+            }
+        }
+    }
+    
+    private func tryToStartTimer() {
+        if isTimerOn { return }
+        else {
+            timer = Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(finishMeasurement), userInfo: nil, repeats: true)
+            isTimerOn = true
+        }
+    }
+    
+    private func stopTimer() {
+        timer?.invalidate()
+        isTimerOn = false
+    }
+    
+}
+
+// MARK: Drawing
+extension PulseView {
+    
+    override func draw(_ rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+        context.setLineWidth(lineSize)
+        context.setStrokeColor(lineColor.cgColor)
+        connectPoints(context)
     }
     
     private func connectPoints(_ context: CGContext) {
@@ -104,6 +182,24 @@ class PulseView: UIView {
         }
     }
     
+    private func rescaleHeart(_ value: CGFloat) {
+        let minimumSizePercent: CGFloat = 0.5
+        let maximumSizePercent: CGFloat = 1.0
+        let percentValue = getValuePercent(value, minimum: currentMinimum, maximum: currentMaximum)
+        let rescaledPercent = percentValue * (maximumSizePercent - minimumSizePercent) + minimumSizePercent
+        let newHeight = rescaledPercent * maxHeartHeight
+        heartHeight.constant = newHeight
+    }
+    
+    func redraw() {
+        self.setNeedsDisplay()
+    }
+    
+}
+
+// MARK: Value scaling
+extension PulseView {
+    
     private func getValuePercent(_ value: CGFloat, minimum: CGFloat, maximum: CGFloat) -> CGFloat {
         let scaledY = (value - minimum) * (1/(maximum-minimum))
         return scaledY
@@ -114,22 +210,6 @@ class PulseView: UIView {
         let scale: CGFloat = 0.95
         scaledValue = scaledValue * scale + (1.0 - scale) * height / 2
         return scaledValue
-    }
-    
-    private func rescaleHeart(_ value: CGFloat) {
-        let minimumSizePercent: CGFloat = 0.5
-        let maximumSizePercent: CGFloat = 1.0
-        let percentValue = getValuePercent(value, minimum: currentMinimum, maximum: currentMaximum)
-        let rescaledPercent = percentValue * (maximumSizePercent - minimumSizePercent) + minimumSizePercent
-        let newHeight = rescaledPercent * MAX_HEART_HEIGHT
-        heartHeight.constant = newHeight
-    }
-    
-    override func draw(_ rect: CGRect) {
-        let context = UIGraphicsGetCurrentContext()
-        context?.setLineWidth(lineSize)
-        context?.setStrokeColor(lineColor.cgColor)
-        connectPoints(context!)
     }
     
 }
